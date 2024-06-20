@@ -2,14 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 
 project(input-example)
 
-add_executable(${PROJECT_NAME} main.c)
+add_executable(${PROJECT_NAME} main.cpp)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2 REQUIRED sdl2)
+pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+pkg_search_module(SDL2_MIXER REQUIRED SDL2_mixer)
 pkg_search_module(SDL2_TTF REQUIRED SDL2_ttf)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	${SDL2_LIBRARIES}
+	${SDL2_IMAGE_LIBRARIES}
+    ${SDL2_MIXER_LIBRARIES}
 	${SDL2_TTF_LIBRARIES}
 	SDL2main
 )
@@ -34,9 +38,13 @@ elseif(VITA)
 		FILE platform/vita/sce_sys sce_sys
 		FILE square_sans_serif_7.ttf square_sans_serif_7.ttf
 		FILE PressStart2P.ttf PressStart2P.ttf
+		FILE laser.ogg laser.ogg
+		FILE alien_1.png alien_1.png
 	)
 endif()
 
 file(COPY PressStart2P.ttf DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
 

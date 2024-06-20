@@ -1,5 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 
 #define NAME "Font Example"
@@ -10,12 +12,41 @@ int closed = 0;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
+SDL_Rect spriteBounds = {WIDTH / 2, HEIGHT / 2, 64, 64};
+
+Mix_Chunk *laserSound = nullptr;
+
 TTF_Font *fontSquare = NULL;
 SDL_Texture* title = NULL;
 SDL_Color fontColor = {0, 0, 0};
 
+Mix_Chunk *loadSound(const char *p_filePath)
+{
+    Mix_Chunk *sound = nullptr;
+
+    sound = Mix_LoadWAV(p_filePath);
+    if (sound == nullptr)
+    {
+        printf("Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+    }
+
+    return sound;
+}
+
+SDL_Texture *loadSprite(const char *file)
+{
+    SDL_Texture *texture = IMG_LoadTexture(renderer, file);
+    return texture;
+}
+
+void renderSprite(SDL_Texture *sprite, SDL_Rect spriteBounds)
+{
+    SDL_QueryTexture(sprite, NULL, NULL, &spriteBounds.w, &spriteBounds.h);
+    SDL_RenderCopy(renderer, sprite, NULL, &spriteBounds);
+}
+
 int setupSdl() {
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER);
+    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO);
     SDL_StopTextInput();
 
     window = SDL_CreateWindow(
@@ -74,6 +105,9 @@ void handleEvents(){
                 if(event.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
                     closed = 1;
                 } else if(event.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
+
+                    Mix_PlayChannel(-1, laserSound, 0);
+
                     if (SDL_HasScreenKeyboardSupport() == SDL_TRUE) {
                         SDL_StartTextInput();
                         updateTitle("Input");
@@ -101,6 +135,20 @@ int game(int argc, char *argv[]){
     if (setupSdl() != 0) {
         return 1;
     }
+
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+    {
+        printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
+    }
+
+    laserSound = loadSound("laser.ogg");
+
+    if (!IMG_Init(IMG_INIT_PNG))
+    {
+        return 2;
+    }
+
+    SDL_Texture *shipSprite = loadSprite("alien_1.png");
 
     if (TTF_Init() == -1) {
         return 5;
@@ -141,12 +189,15 @@ int game(int argc, char *argv[]){
     subtitleRect.y = subtitleRect.h/2;
 
     while (!closed) {
+
         handleEvents();
         SDL_QueryTexture(title, NULL, NULL, &titleRect.w, &titleRect.h);
         titleRect.x = WIDTH/2 - titleRect.w/2;
         titleRect.y = HEIGHT/2 - titleRect.h/2;
         SDL_RenderCopy(renderer, title, NULL, &titleRect);
         SDL_RenderCopy(renderer, subtitle, NULL, &subtitleRect);
+
+        renderSprite(shipSprite, spriteBounds);
         SDL_RenderPresent(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
