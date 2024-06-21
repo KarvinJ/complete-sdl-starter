@@ -37,13 +37,11 @@ elseif(VITA)
 		NAME ${PROJECT_NAME}
 		FILE platform/vita/sce_sys sce_sys
 		FILE square_sans_serif_7.ttf square_sans_serif_7.ttf
-		FILE PressStart2P.ttf PressStart2P.ttf
 		FILE laser.ogg laser.ogg
 		FILE alien_1.png alien_1.png
 	)
 endif()
 
-file(COPY PressStart2P.ttf DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY alien_1.png DESTINATION ${CMAKE_BINARY_DIR})

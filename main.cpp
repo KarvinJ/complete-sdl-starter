@@ -1,24 +1,86 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
-#include <stdio.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
+#include <iostream>
+#include <vector>
 
-#define NAME "Font Example"
-#define WIDTH 480
-#define HEIGHT 272
+const int SPEED = 600;
+const int SCREEN_WIDTH = 960;
+const int SCREEN_HEIGHT = 544;
 
-int closed = 0;
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
+SDL_Window *window = nullptr;
+SDL_Renderer *renderer = nullptr;
+SDL_GameController* controller = NULL;
 
-SDL_Rect spriteBounds = {WIDTH / 2, HEIGHT / 2, 64, 64};
+SDL_Texture *sprite = nullptr;
+Mix_Chunk *test = nullptr;
 
-Mix_Chunk *laserSound = nullptr;
+SDL_Rect spriteBounds = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 38, 34};
 
-TTF_Font *fontSquare = NULL;
-SDL_Texture* title = NULL;
-SDL_Color fontColor = {0, 0, 0};
+SDL_Texture *title = nullptr;
+SDL_Rect titleRect;
+
+SDL_Color fontColor = {255, 255, 255};
+
+void quitGame()
+{
+    SDL_GameControllerClose(controller);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
+
+void handleEvents()
+{
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event))
+    {
+
+        SDL_Event event;
+
+        while (SDL_PollEvent(&event)) {
+
+            if (event.type == SDL_QUIT) {
+                
+                quitGame();
+                exit(0);
+            }
+        }
+    }
+}
+
+void updateTitle(const char *text)
+{
+    TTF_Font *fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 64);
+    if (fontSquare == nullptr)
+    {
+        printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
+    }
+
+    SDL_Surface *surface1 = TTF_RenderUTF8_Blended(fontSquare, text, fontColor);
+    if (surface1 == NULL)
+    {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load create title! SDL Error: %s\n", SDL_GetError());
+        exit(3);
+    }
+    SDL_DestroyTexture(title);
+    title = SDL_CreateTextureFromSurface(renderer, surface1);
+    if (title == NULL)
+    {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load texture for image block.bmp! SDL Error: %s\n", SDL_GetError());
+    }
+    SDL_FreeSurface(surface1);
+}
+
+SDL_Texture *loadSprite(const char *file, SDL_Renderer *renderer)
+{
+    SDL_Texture *texture = IMG_LoadTexture(renderer, file);
+    return texture;
+}
 
 Mix_Chunk *loadSound(const char *p_filePath)
 {
@@ -33,178 +95,134 @@ Mix_Chunk *loadSound(const char *p_filePath)
     return sound;
 }
 
-SDL_Texture *loadSprite(const char *file)
+void update(float deltaTime)
 {
-    SDL_Texture *texture = IMG_LoadTexture(renderer, file);
-    return texture;
+     SDL_GameControllerUpdate();
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && spriteBounds.y > 0) {
+        spriteBounds.y -= SPEED * deltaTime;
+    }
+
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && spriteBounds.y < SCREEN_HEIGHT - spriteBounds.h) {
+        spriteBounds.y += SPEED * deltaTime;
+    }
+
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && spriteBounds.x > 0) {
+        spriteBounds.x -= SPEED * deltaTime;
+    }
+
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && spriteBounds.x < SCREEN_WIDTH - spriteBounds.w) {
+        spriteBounds.x += SPEED * deltaTime;
+    }
+
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && spriteBounds.y > 0) {
+        Mix_PlayChannel(-1, test, 0);
+    }
 }
 
-void renderSprite(SDL_Texture *sprite, SDL_Rect spriteBounds)
+void renderSprite(SDL_Texture *sprite, SDL_Renderer *renderer, SDL_Rect spriteBounds)
 {
     SDL_QueryTexture(sprite, NULL, NULL, &spriteBounds.w, &spriteBounds.h);
     SDL_RenderCopy(renderer, sprite, NULL, &spriteBounds);
 }
 
-int setupSdl() {
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO);
-    SDL_StopTextInput();
+void render()
+{
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
-    window = SDL_CreateWindow(
-        NAME,
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        WIDTH,
-        HEIGHT,
-        SDL_WINDOW_SHOWN
-    );
-    if (window == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initiation window. Error %s", SDL_GetError());
+    SDL_QueryTexture(title, NULL, NULL, &titleRect.w, &titleRect.h);
+    titleRect.x = SCREEN_WIDTH / 2 - titleRect.w / 2;
+    titleRect.y = SCREEN_HEIGHT / 2 - titleRect.h / 2;
+    // After I use the &titleRect.w, &titleRect.h in the SDL_QueryTexture.
+    //  I get the width and height of the actual texture
+    SDL_RenderCopy(renderer, title, NULL, &titleRect);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    renderSprite(sprite, renderer, spriteBounds);
+
+    SDL_RenderPresent(renderer);
+}
+
+int main(int argc, char *args[])
+{
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0)
+    {
+        std::cout << "SDL crashed. Error: " << SDL_GetError();
+        return 1;
+    }
+
+    window = SDL_CreateWindow("My Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (window == nullptr)
+    {
+        std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
+        SDL_Quit();
         return 1;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initialize renderer. Error: %s", SDL_GetError());
+    if (renderer == nullptr)
+    {
+        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
         return 1;
     }
 
-    return 0;
-}
+    if (SDL_NumJoysticks() < 1) {
+        printf("No game controllers connected!\n");
+        return -1;
+    } 
+    else {
 
-void updateTitle(const char * text) {
-    SDL_Surface *surface1 = TTF_RenderUTF8_Blended(fontSquare, text, fontColor);
-    if (surface1 == NULL) {
-        printf("TTF_OpenFont: %s\n", TTF_GetError());
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load create title! SDL Error: %s\n", SDL_GetError());
-        exit(3);
-    }
-    SDL_DestroyTexture(title);
-    title = SDL_CreateTextureFromSurface(renderer, surface1);
-    if (title == NULL) {
-        printf("TTF_OpenFont: %s\n", TTF_GetError());
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load texture for image block.bmp! SDL Error: %s\n", SDL_GetError());
-    }
-    SDL_FreeSurface(surface1);
-}
+        controller = SDL_GameControllerOpen(0);
+        if (controller == NULL) {
 
-void handleEvents(){
-    SDL_Event event;
-    if (SDL_PollEvent(&event)) {
-        switch (event.type) {
-            case SDL_QUIT:
-                closed = 1;
-                break;
-            case SDL_CONTROLLERDEVICEADDED:
-                    SDL_GameControllerOpen(event.cdevice.which);
-                    break;
-            case SDL_KEYDOWN:
-                if(event.key.keysym.sym == SDLK_ESCAPE)
-                    closed = 1;
-                break;
-            case SDL_CONTROLLERBUTTONDOWN:
-                if(event.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
-                    closed = 1;
-                } else if(event.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
-
-                    Mix_PlayChannel(-1, laserSound, 0);
-
-                    if (SDL_HasScreenKeyboardSupport() == SDL_TRUE) {
-                        SDL_StartTextInput();
-                        updateTitle("Input");
-                    } else {
-                       updateTitle("Can't");
-                    }
-                } else if(event.cbutton.button == SDL_CONTROLLER_BUTTON_B) {
-                    SDL_StopTextInput();
-                    updateTitle("No Input");
-                } else if(event.cbutton.button == SDL_CONTROLLER_BUTTON_Y) {
-                    SDL_StartTextInput();
-                    updateTitle("Input");
-                }
-                break;
-            case SDL_TEXTINPUT:
-                updateTitle(event.text.text);
-                break;
+            printf("Unable to open game controller! SDL Error: %s\n", SDL_GetError());
+            return -1;
         }
     }
-}
 
-int game(int argc, char *argv[]){
-    SDL_SetHint("SDL_HINT_ENABLE_SCREEN_KEYBOARD", "1");
-    printf("Starting game\n");
-    if (setupSdl() != 0) {
+    if (!IMG_Init(IMG_INIT_PNG))
+    {
+        std::cout << "SDL_image crashed. Error: " << SDL_GetError();
         return 1;
     }
 
+    // Initialize SDL_mixer
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
     {
         printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
     }
 
-    laserSound = loadSound("laser.ogg");
-
-    if (!IMG_Init(IMG_INIT_PNG))
+    if (TTF_Init() == -1)
     {
-        return 2;
+        return 1;
     }
 
-    SDL_Texture *shipSprite = loadSprite("alien_1.png");
-
-    if (TTF_Init() == -1) {
-        return 5;
-    }
-    // open font files
-    TTF_Font *font2P = TTF_OpenFont("PressStart2P.ttf", 16);
-    if (font2P == NULL) {
-        printf("TTF_OpenFont font2P: %s\n", TTF_GetError());
-        return 2;
-    }
-    fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 64);
-    if (fontSquare == NULL) {
-        printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
-        return 2;
-    }
     // load title
     updateTitle("Hello!");
+    
+    sprite = loadSprite("alien_1.png", renderer);
+    test = loadSound("laser.ogg");
 
-    // load subtitle
-    SDL_Surface *surface2 = TTF_RenderUTF8_Blended(font2P, "Press start to quit", fontColor);
-    if (surface2 == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load create subtitle! SDL Error: %s\n", SDL_GetError());
-        return 3;
-    }
-    SDL_Texture* subtitle = SDL_CreateTextureFromSurface(renderer, surface2);
-    if (title == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to load texture for image block.bmp! SDL Error: %s\n", SDL_GetError());
-        return 4;
-    }
-    SDL_FreeSurface(surface2);
+    Uint32 previousFrameTime = SDL_GetTicks();
+    Uint32 currentFrameTime = previousFrameTime;
+    float deltaTime = 0.0f;
 
-    // Create SDL 
-    SDL_Rect titleRect;
+    while (true)
+    {
+        currentFrameTime = SDL_GetTicks();
 
-    SDL_Rect subtitleRect;
-    SDL_QueryTexture(subtitle, NULL, NULL, &subtitleRect.w, &subtitleRect.h);
-    subtitleRect.x = WIDTH/2 - subtitleRect.w/2;
-    subtitleRect.y = subtitleRect.h/2;
+        deltaTime = (currentFrameTime - previousFrameTime) / 1000.0f;
 
-    while (!closed) {
+        previousFrameTime = currentFrameTime;
 
         handleEvents();
-        SDL_QueryTexture(title, NULL, NULL, &titleRect.w, &titleRect.h);
-        titleRect.x = WIDTH/2 - titleRect.w/2;
-        titleRect.y = HEIGHT/2 - titleRect.h/2;
-        SDL_RenderCopy(renderer, title, NULL, &titleRect);
-        SDL_RenderCopy(renderer, subtitle, NULL, &subtitleRect);
-
-        renderSprite(shipSprite, spriteBounds);
-        SDL_RenderPresent(renderer);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderClear(renderer);
+        update(deltaTime);
+        render();
     }
-    return 0;
-}
 
-int main(int argc, char *argv[]) {
-    return game(argc, argv);
+    return 0;
 }
