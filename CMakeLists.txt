@@ -27,7 +27,7 @@ if(PLATFORM_PSP)
 		TITLE ${PROJECT_NAME}
 	)
 elseif(VITA)
-	set(VITA_TITLEID "INPUT00001")
+	set(VITA_TITLEID "INPUT0001") #Title length == 9
 
 	include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
