@@ -53,7 +53,7 @@ void handleEvents()
 
 void updateTitle(const char *text)
 {
-    TTF_Font *fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 64);
+    TTF_Font *fontSquare = TTF_OpenFont("res/fonts/square_sans_serif_7.ttf", 64);
     if (fontSquare == nullptr)
     {
         printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
@@ -204,8 +204,8 @@ int main(int argc, char *args[])
     // load title
     updateTitle("Hello!");
     
-    sprite = loadSprite("alien_1.png", renderer);
-    test = loadSound("laser.ogg");
+    sprite = loadSprite("res/sprites/alien_1.png", renderer);
+    test = loadSound("res/sounds/laser.ogg");
 
     Uint32 previousFrameTime = SDL_GetTicks();
     Uint32 currentFrameTime = previousFrameTime;
