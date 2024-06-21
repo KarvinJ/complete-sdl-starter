@@ -115,8 +115,10 @@ void update(float deltaTime)
         spriteBounds.x += SPEED * deltaTime;
     }
 
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && spriteBounds.y > 0) {
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
+        
         Mix_PlayChannel(-1, test, 0);
+        updateTitle("X Pressed");
     }
 }
 
