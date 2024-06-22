@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(full-sdl-template)
+project(input-example)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
@@ -27,7 +27,7 @@ if(PLATFORM_PSP)
 		TITLE ${PROJECT_NAME}
 	)
 elseif(VITA)
-	set(VITA_TITLEID "INPUT0001") #Title length == 9
+	set(VITA_TITLEID "INPUT0001") #title length == 9
 
 	include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
@@ -36,13 +36,13 @@ elseif(VITA)
 		VERSION "01.00"
 		NAME ${PROJECT_NAME}
 		FILE platform/vita/sce_sys sce_sys
-		FILE res/fonts/square_sans_serif_7.ttf res/fonts/square_sans_serif_7.ttf
-		FILE res/sounds/laser.ogg res/sounds/laser.ogg
-		FILE res/sprites/alien_1.png res/sprites/alien_1.png
+		FILE square_sans_serif_7.ttf square_sans_serif_7.ttf
+		FILE laser.ogg laser.ogg
+		FILE alien_1.png alien_1.png
 	)
 endif()
 
-file(COPY res/fonts/square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY res/sounds/laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY res/sprites/alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
 

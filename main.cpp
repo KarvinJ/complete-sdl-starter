@@ -53,7 +53,7 @@ void handleEvents()
 
 void updateTitle(const char *text)
 {
-    TTF_Font *fontSquare = TTF_OpenFont("res/fonts/square_sans_serif_7.ttf", 64);
+    TTF_Font *fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 64);
     if (fontSquare == nullptr)
     {
         printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
@@ -115,10 +115,8 @@ void update(float deltaTime)
         spriteBounds.x += SPEED * deltaTime;
     }
 
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
-        
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && spriteBounds.y > 0) {
         Mix_PlayChannel(-1, test, 0);
-        updateTitle("X Pressed");
     }
 }
 
@@ -206,8 +204,8 @@ int main(int argc, char *args[])
     // load title
     updateTitle("Hello!");
     
-    sprite = loadSprite("res/sprites/alien_1.png", renderer);
-    test = loadSound("res/sounds/laser.ogg");
+    sprite = loadSprite("alien_1.png", renderer);
+    test = loadSound("laser.ogg");
 
     Uint32 previousFrameTime = SDL_GetTicks();
     Uint32 currentFrameTime = previousFrameTime;
