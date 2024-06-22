@@ -208,6 +208,7 @@ int main(int argc, char *args[])
     // load title
     updateTitle("Hello!");
     
+    //The path of the file references the build folder
     sprite = loadSprite("alien_1.png", renderer);
     sound = loadSound("laser.ogg");
 

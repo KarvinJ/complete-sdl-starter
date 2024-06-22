@@ -38,7 +38,7 @@ elseif(VITA)
 		FILE platform/vita/sce_sys sce_sys
 		FILE res/fonts/square_sans_serif_7.ttf square_sans_serif_7.ttf
 		FILE res/sounds/laser.ogg laser.ogg
-		FILE res/sprites/alien_1.png alien_1.png
+		FILE res/sprites/alien_1.png alien_1.png 
 	)
 endif()
 
