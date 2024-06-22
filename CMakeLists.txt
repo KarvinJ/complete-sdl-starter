@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(input-example)
+project(complete-template)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
@@ -36,13 +36,13 @@ elseif(VITA)
 		VERSION "01.00"
 		NAME ${PROJECT_NAME}
 		FILE platform/vita/sce_sys sce_sys
-		FILE square_sans_serif_7.ttf square_sans_serif_7.ttf
-		FILE laser.ogg laser.ogg
-		FILE alien_1.png alien_1.png
+		FILE res/fonts/square_sans_serif_7.ttf square_sans_serif_7.ttf
+		FILE res/sounds/laser.ogg laser.ogg
+		FILE res/sprites/alien_1.png alien_1.png
 	)
 endif()
 
-file(COPY square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY res/fonts/square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY res/sounds/laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY res/sprites/alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
 

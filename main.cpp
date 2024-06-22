@@ -6,17 +6,17 @@
 #include <vector>
 
 // psp = 1, vita = 2
-const int scale = 2;
+const int scale = 1;
 const int SCREEN_WIDTH = 480*scale;
 const int SCREEN_HEIGHT = 272*scale;
 const int SPEED = 300*scale;
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
-SDL_GameController* controller = NULL;
+SDL_GameController* controller = nullptr;
 
 SDL_Texture *sprite = nullptr;
-Mix_Chunk *test = nullptr;
+Mix_Chunk *sound = nullptr;
 
 SDL_Rect spriteBounds = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 38, 34};
 
@@ -117,8 +117,10 @@ void update(float deltaTime)
         spriteBounds.x += SPEED * deltaTime;
     }
 
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A) && spriteBounds.y > 0) {
-        Mix_PlayChannel(-1, test, 0);
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
+        
+        Mix_PlayChannel(-1, sound, 0);
+        updateTitle("X Pressed!");
     }
 }
 
@@ -207,7 +209,7 @@ int main(int argc, char *args[])
     updateTitle("Hello!");
     
     sprite = loadSprite("alien_1.png", renderer);
-    test = loadSound("laser.ogg");
+    sound = loadSound("laser.ogg");
 
     Uint32 previousFrameTime = SDL_GetTicks();
     Uint32 currentFrameTime = previousFrameTime;
