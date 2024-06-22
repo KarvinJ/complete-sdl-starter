@@ -5,9 +5,11 @@
 #include <iostream>
 #include <vector>
 
-const int SPEED = 600;
-const int SCREEN_WIDTH = 960;
-const int SCREEN_HEIGHT = 544;
+// psp = 1, vita = 2
+const int scale = 2;
+const int SCREEN_WIDTH = 480*scale;
+const int SCREEN_HEIGHT = 272*scale;
+const int SPEED = 300*scale;
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
@@ -53,7 +55,7 @@ void handleEvents()
 
 void updateTitle(const char *text)
 {
-    TTF_Font *fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 64);
+    TTF_Font *fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 32*scale);
     if (fontSquare == nullptr)
     {
         printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
