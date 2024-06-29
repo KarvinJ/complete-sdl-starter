@@ -27,9 +27,15 @@ SDL_Color fontColor = {255, 255, 255};
 
 void quitGame()
 {
+    Mix_FreeChunk(sound);
+    SDL_DestroyTexture(sprite);
+    SDL_DestroyTexture(title);
     SDL_GameControllerClose(controller);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    Mix_CloseAudio();
+    IMG_Quit();
+    TTF_Quit();
     SDL_Quit();
 }
 
