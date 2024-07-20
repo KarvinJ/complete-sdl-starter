@@ -4,9 +4,11 @@
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <vector>
+#include "sdl_starter.h"
+#include "sdl_assets_loader.h"
 
 // psp = 1, vita = 2
-const int scale = 1;
+const int scale = 2;
 const int SCREEN_WIDTH = 480*scale;
 const int SCREEN_HEIGHT = 272*scale;
 const int SPEED = 300*scale;
@@ -15,10 +17,8 @@ SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
 SDL_GameController* controller = nullptr;
 
-SDL_Texture *sprite = nullptr;
+Sprite alienSprite;
 Mix_Chunk *sound = nullptr;
-
-SDL_Rect spriteBounds = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 38, 34};
 
 SDL_Texture *title = nullptr;
 SDL_Rect titleRect;
@@ -28,7 +28,7 @@ SDL_Color fontColor = {255, 255, 255};
 void quitGame()
 {
     Mix_FreeChunk(sound);
-    SDL_DestroyTexture(sprite);
+    SDL_DestroyTexture(alienSprite.texture);
     SDL_DestroyTexture(title);
     SDL_GameControllerClose(controller);
     SDL_DestroyRenderer(renderer);
@@ -45,7 +45,6 @@ void handleEvents()
 
     while (SDL_PollEvent(&event))
     {
-
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
@@ -84,43 +83,24 @@ void updateTitle(const char *text)
     SDL_FreeSurface(surface1);
 }
 
-SDL_Texture *loadSprite(const char *file, SDL_Renderer *renderer)
-{
-    SDL_Texture *texture = IMG_LoadTexture(renderer, file);
-    return texture;
-}
-
-Mix_Chunk *loadSound(const char *p_filePath)
-{
-    Mix_Chunk *sound = nullptr;
-
-    sound = Mix_LoadWAV(p_filePath);
-    if (sound == nullptr)
-    {
-        printf("Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError());
-    }
-
-    return sound;
-}
-
 void update(float deltaTime)
 {
      SDL_GameControllerUpdate();
 
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && spriteBounds.y > 0) {
-        spriteBounds.y -= SPEED * deltaTime;
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && alienSprite.textureBounds.y > 0) {
+        alienSprite.textureBounds.y -= SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && spriteBounds.y < SCREEN_HEIGHT - spriteBounds.h) {
-        spriteBounds.y += SPEED * deltaTime;
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && alienSprite.textureBounds.y < SCREEN_HEIGHT - alienSprite.textureBounds.h) {
+        alienSprite.textureBounds.y += SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && spriteBounds.x > 0) {
-        spriteBounds.x -= SPEED * deltaTime;
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && alienSprite.textureBounds.x > 0) {
+        alienSprite.textureBounds.x -= SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && spriteBounds.x < SCREEN_WIDTH - spriteBounds.w) {
-        spriteBounds.x += SPEED * deltaTime;
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && alienSprite.textureBounds.x < SCREEN_WIDTH - alienSprite.textureBounds.w) {
+        alienSprite.textureBounds.x += SPEED * deltaTime;
     }
 
     if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
@@ -130,10 +110,9 @@ void update(float deltaTime)
     }
 }
 
-void renderSprite(SDL_Texture *sprite, SDL_Renderer *renderer, SDL_Rect spriteBounds)
+void renderSprite(Sprite sprite)
 {
-    SDL_QueryTexture(sprite, NULL, NULL, &spriteBounds.w, &spriteBounds.h);
-    SDL_RenderCopy(renderer, sprite, NULL, &spriteBounds);
+    SDL_RenderCopy(renderer, sprite.texture, NULL, &sprite.textureBounds);
 }
 
 void render()
@@ -150,33 +129,19 @@ void render()
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    renderSprite(sprite, renderer, spriteBounds);
+    renderSprite(alienSprite);
 
     SDL_RenderPresent(renderer);
 }
 
 int main(int argc, char *args[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0)
-    {
-        std::cout << "SDL crashed. Error: " << SDL_GetError();
-        return 1;
-    }
-
     window = SDL_CreateWindow("My Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == nullptr)
-    {
-        std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
-        SDL_Quit();
-        return 1;
-    }
-
+   
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == nullptr)
+ 
+    if(startSDL(window, renderer) > 0) 
     {
-        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
-        SDL_DestroyWindow(window);
-        SDL_Quit();
         return 1;
     }
 
@@ -194,28 +159,12 @@ int main(int argc, char *args[])
         }
     }
 
-    if (!IMG_Init(IMG_INIT_PNG))
-    {
-        std::cout << "SDL_image crashed. Error: " << SDL_GetError();
-        return 1;
-    }
-
-    // Initialize SDL_mixer
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
-    {
-        printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
-    }
-
-    if (TTF_Init() == -1)
-    {
-        return 1;
-    }
-
     // load title
     updateTitle("Hello!");
     
     //The path of the file references the build folder
-    sprite = loadSprite("alien_1.png", renderer);
+    alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
     sound = loadSound("laser.ogg");
 
     Uint32 previousFrameTime = SDL_GetTicks();
@@ -225,9 +174,7 @@ int main(int argc, char *args[])
     while (true)
     {
         currentFrameTime = SDL_GetTicks();
-
         deltaTime = (currentFrameTime - previousFrameTime) / 1000.0f;
-
         previousFrameTime = currentFrameTime;
 
         handleEvents();
