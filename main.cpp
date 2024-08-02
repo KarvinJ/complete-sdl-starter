@@ -138,7 +138,6 @@ int main(int argc, char *args[])
     //The path of the file references the build folder
     alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
-//Convert this to wav file.
     sound = loadSound("laser.wav");
 
     // method to reduce the volume of the sound in half.
