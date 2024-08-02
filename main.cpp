@@ -7,10 +7,6 @@
 #include "sdl_starter.h"
 #include "sdl_assets_loader.h"
 
-// psp = 1, vita = 2
-const int scale = 2;
-const int SCREEN_WIDTH = 480*scale;
-const int SCREEN_HEIGHT = 272*scale;
 const int SPEED = 300*scale;
 
 SDL_Window *window = nullptr;
@@ -24,7 +20,6 @@ SDL_Texture *title = nullptr;
 SDL_Rect titleRect;
 
 TTF_Font *fontSquare = nullptr;
-SDL_Color fontColor = {255, 255, 255};
 
 void quitGame()
 {
@@ -44,71 +39,43 @@ void handleEvents()
 {
     SDL_Event event;
 
-    while (SDL_PollEvent(&event))
+    while (SDL_PollEvent(&event)) 
     {
-        SDL_Event event;
+        if (event.type == SDL_QUIT) 
+        {
+            quitGame();
+            exit(0);
+        }
 
-        while (SDL_PollEvent(&event)) {
-
-            if (event.type == SDL_QUIT) {
-                
-                quitGame();
-                exit(0);
-            }
+//when I need a more precise input i should use this method of input reading
+        if (event.type == SDL_CONTROLLERBUTTONDOWN && event.cbutton.button == SDL_CONTROLLER_BUTTON_A)
+        {
+            Mix_PlayChannel(-1, sound, 0);
+            updateTextureText(title, "X Pressed!", fontSquare, renderer);
         }
     }
 }
 
-void updateTextureText(SDL_Texture *&texture, const char *text)
-{
-    if (fontSquare == nullptr)
-    {
-        printf("TTF_OpenFont fontSquare: %s\n", TTF_GetError());
-    }
-
-    SDL_Surface *surface = TTF_RenderUTF8_Blended(fontSquare, text, fontColor);
-    if (surface == nullptr)
-    {
-        printf("TTF_OpenFont: %s\n", TTF_GetError());
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to create text surface! SDL Error: %s\n", SDL_GetError());
-        exit(3);
-    }
-
-    SDL_DestroyTexture(texture);
-    texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (texture == nullptr)
-    {
-        printf("TTF_OpenFont: %s\n", TTF_GetError());
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unable to create texture from surface! SDL Error: %s\n", SDL_GetError());
-    }
-
-    SDL_FreeSurface(surface);
-}
-
 void update(float deltaTime)
 {
-     SDL_GameControllerUpdate();
-
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && alienSprite.textureBounds.y > 0) {
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && alienSprite.textureBounds.y > 0) 
+    {
         alienSprite.textureBounds.y -= SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && alienSprite.textureBounds.y < SCREEN_HEIGHT - alienSprite.textureBounds.h) {
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && alienSprite.textureBounds.y < SCREEN_HEIGHT - alienSprite.textureBounds.h) 
+    {
         alienSprite.textureBounds.y += SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && alienSprite.textureBounds.x > 0) {
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && alienSprite.textureBounds.x > 0) 
+    {
         alienSprite.textureBounds.x -= SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && alienSprite.textureBounds.x < SCREEN_WIDTH - alienSprite.textureBounds.w) {
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && alienSprite.textureBounds.x < SCREEN_WIDTH - alienSprite.textureBounds.w) 
+    {
         alienSprite.textureBounds.x += SPEED * deltaTime;
-    }
-
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
-        
-        Mix_PlayChannel(-1, sound, 0);
-        updateTextureText(title, "X Pressed!");
     }
 }
 
@@ -164,7 +131,7 @@ int main(int argc, char *args[])
     fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 32*scale);
 
     // load title
-    updateTextureText(title, "0");
+    updateTextureText(title, "0", fontSquare, renderer);
     
     //The path of the file references the build folder
     alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -180,6 +147,8 @@ int main(int argc, char *args[])
         currentFrameTime = SDL_GetTicks();
         deltaTime = (currentFrameTime - previousFrameTime) / 1000.0f;
         previousFrameTime = currentFrameTime;
+
+        SDL_GameControllerUpdate();
 
         handleEvents();
         update(deltaTime);
