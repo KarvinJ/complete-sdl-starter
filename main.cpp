@@ -14,7 +14,9 @@ SDL_Renderer *renderer = nullptr;
 SDL_GameController* controller = nullptr;
 
 Sprite alienSprite;
+
 Mix_Chunk *sound = nullptr;
+Mix_Music *music = nullptr;
 
 SDL_Texture *title = nullptr;
 SDL_Rect titleRect;
@@ -136,7 +138,20 @@ int main(int argc, char *args[])
     //The path of the file references the build folder
     alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
+//Convert this to wav file.
     sound = loadSound("laser.ogg");
+
+    // method to reduce the volume of the sound in half.
+    Mix_VolumeChunk(sound, MIX_MAX_VOLUME / 2);
+
+    // Load music file (only one data piece, intended for streaming)
+    music = loadMusic("music.wav");
+
+    // reduce music volume in half
+    Mix_VolumeMusic(MIX_MAX_VOLUME / 2);
+
+    // Start playing streamed music, put -1 to loop indifinitely
+    Mix_PlayMusic(music, -1);
 
     Uint32 previousFrameTime = SDL_GetTicks();
     Uint32 currentFrameTime = previousFrameTime;

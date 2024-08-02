@@ -38,11 +38,13 @@ elseif(VITA)
 		FILE platform/vita/sce_sys sce_sys
 		FILE res/fonts/square_sans_serif_7.ttf square_sans_serif_7.ttf
 		FILE res/sounds/laser.ogg laser.ogg
+		FILE res/music/music.wav music.wav
 		FILE res/sprites/alien_1.png alien_1.png 
 	)
 endif()
 
 file(COPY res/fonts/square_sans_serif_7.ttf DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY res/sounds/laser.ogg DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY res/music/music.wav DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY res/sprites/alien_1.png DESTINATION ${CMAKE_BINARY_DIR})
 
