@@ -139,7 +139,7 @@ int main(int argc, char *args[])
     alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
 //Convert this to wav file.
-    sound = loadSound("laser.ogg");
+    sound = loadSound("laser.wav");
 
     // method to reduce the volume of the sound in half.
     Mix_VolumeChunk(sound, MIX_MAX_VOLUME / 2);
