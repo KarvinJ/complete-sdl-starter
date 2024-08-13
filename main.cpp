@@ -13,13 +13,15 @@ SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
 SDL_GameController* controller = nullptr;
 
+bool isGamePaused;
+
 Sprite alienSprite;
 
 Mix_Chunk *sound = nullptr;
 Mix_Music *music = nullptr;
 
-SDL_Texture *title = nullptr;
-SDL_Rect titleRect;
+SDL_Texture *pauseTexture = nullptr;
+SDL_Rect pauseBounds;
 
 TTF_Font *fontSquare = nullptr;
 
@@ -27,7 +29,7 @@ void quitGame()
 {
     Mix_FreeChunk(sound);
     SDL_DestroyTexture(alienSprite.texture);
-    SDL_DestroyTexture(title);
+    SDL_DestroyTexture(pauseTexture);
     SDL_GameControllerClose(controller);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -50,10 +52,10 @@ void handleEvents()
         }
 
 //when I need a more precise input i should use this method of input reading
-        if (event.type == SDL_CONTROLLERBUTTONDOWN && event.cbutton.button == SDL_CONTROLLER_BUTTON_A)
+        if (event.type == SDL_CONTROLLERBUTTONDOWN && event.cbutton.button == SDL_CONTROLLER_BUTTON_START)
         {
+            isGamePaused = !isGamePaused;
             Mix_PlayChannel(-1, sound, 0);
-            updateTextureText(title, "X Pressed!", fontSquare, renderer);
         }
     }
 }
@@ -91,12 +93,10 @@ void render()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_QueryTexture(title, NULL, NULL, &titleRect.w, &titleRect.h);
-    titleRect.x = SCREEN_WIDTH / 2 - titleRect.w / 2;
-    titleRect.y = SCREEN_HEIGHT / 2 - titleRect.h / 2;
-    // After I use the &titleRect.w, &titleRect.h in the SDL_QueryTexture.
-    //  I get the width and height of the actual texture
-    SDL_RenderCopy(renderer, title, NULL, &titleRect);
+    if(isGamePaused) 
+    {
+        SDL_RenderCopy(renderer, pauseTexture, NULL, &pauseBounds);
+    }
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
@@ -109,6 +109,9 @@ int main(int argc, char *args[])
 {
     window = SDL_CreateWindow("My Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
    
+   // Using SDL_RENDERER_PRESENTVSYNC effectively synchronizes your rendering with the display's refresh rate, which should cap the framerate to the refresh rate
+    //  of the display (commonly 60 Hz, resulting in 60 FPS). This means that, in most cases, you don't need to manually cap the framerate since VSync already
+    //  limits the maximum framerate to match the display's refresh rate.
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
  
     if(startSDL(window, renderer) > 0) 
@@ -116,15 +119,16 @@ int main(int argc, char *args[])
         return 1;
     }
 
-    if (SDL_NumJoysticks() < 1) {
+    if (SDL_NumJoysticks() < 1) 
+    {
         printf("No game controllers connected!\n");
         return -1;
     } 
-    else {
-
+    else 
+    {
         controller = SDL_GameControllerOpen(0);
-        if (controller == NULL) {
-
+        if (controller == NULL) 
+        {
             printf("Unable to open game controller! SDL Error: %s\n", SDL_GetError());
             return -1;
         }
@@ -133,7 +137,13 @@ int main(int argc, char *args[])
     fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 32*scale);
 
     // load title
-    updateTextureText(title, "0", fontSquare, renderer);
+    updateTextureText(pauseTexture, "Game Paused", fontSquare, renderer);
+
+    SDL_QueryTexture(pauseTexture, NULL, NULL, &pauseBounds.w, &pauseBounds.h);
+    pauseBounds.x = SCREEN_WIDTH / 2 - pauseBounds.w / 2;
+    pauseBounds.y = 100;
+    // After I use the &titleRect.w, &titleRect.h in the SDL_QueryTexture.
+    //  I get the width and height of the actual texture
     
     //The path of the file references the build folder
     alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -165,9 +175,14 @@ int main(int argc, char *args[])
         SDL_GameControllerUpdate();
 
         handleEvents();
-        update(deltaTime);
+
+        if(!isGamePaused)
+        {
+            update(deltaTime);
+        }
+
         render();
     }
 
-    return 0;
+    quitGame();
 }
