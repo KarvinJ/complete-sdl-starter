@@ -1,32 +1,47 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
 #include "sdl_starter.h"
 #include "sdl_assets_loader.h"
+#include <time.h>
 
-const int SPEED = 300*scale;
+const int PLAYER_SPEED = 300*scale;
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
 SDL_GameController* controller = nullptr;
 
-bool isGamePaused;
-
-Sprite alienSprite;
+Sprite playerSprite;
 
 Mix_Chunk *sound = nullptr;
 Mix_Music *music = nullptr;
+
+bool isGamePaused;
 
 SDL_Texture *pauseTexture = nullptr;
 SDL_Rect pauseBounds;
 
 TTF_Font *fontSquare = nullptr;
 
+SDL_Rect ball = {SCREEN_WIDTH / 2 + 50, SCREEN_HEIGHT / 2, 32, 32};
+
+int ballVelocityX = 200 * scale;
+int ballVelocityY = 200 * scale;
+
+int colorIndex;
+
+SDL_Color colors[] = {
+    {128, 128, 128, 0}, // gray 
+    {255, 255, 255, 0}, // white
+    {255, 0, 0, 0},     // red
+    {0, 255, 0, 0},     // green
+    {0, 0, 255, 0},     // blue
+    {255, 255, 0, 0},   // brown
+    {0, 255, 255, 0},   // cyan
+    {255, 0, 255, 0},   // purple
+};
+
 void quitGame()
 {
     Mix_FreeChunk(sound);
-    SDL_DestroyTexture(alienSprite.texture);
+    SDL_DestroyTexture(playerSprite.texture);
     SDL_DestroyTexture(pauseTexture);
     SDL_GameControllerClose(controller);
     SDL_DestroyRenderer(renderer);
@@ -58,27 +73,57 @@ void handleEvents()
     }
 }
 
+int rand_range(int min, int max)
+{
+    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
+
 void update(float deltaTime)
 {
-    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && alienSprite.textureBounds.y > 0) 
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP) && playerSprite.textureBounds.y > 0) 
     {
-        alienSprite.textureBounds.y -= SPEED * deltaTime;
+        playerSprite.textureBounds.y -= PLAYER_SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && alienSprite.textureBounds.y < SCREEN_HEIGHT - alienSprite.textureBounds.h) 
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN) && playerSprite.textureBounds.y < SCREEN_HEIGHT - playerSprite.textureBounds.h) 
     {
-        alienSprite.textureBounds.y += SPEED * deltaTime;
+        playerSprite.textureBounds.y += PLAYER_SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && alienSprite.textureBounds.x > 0) 
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT) && playerSprite.textureBounds.x > 0) 
     {
-        alienSprite.textureBounds.x -= SPEED * deltaTime;
+        playerSprite.textureBounds.x -= PLAYER_SPEED * deltaTime;
     }
 
-    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && alienSprite.textureBounds.x < SCREEN_WIDTH - alienSprite.textureBounds.w) 
+    else if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) && playerSprite.textureBounds.x < SCREEN_WIDTH - playerSprite.textureBounds.w) 
     {
-        alienSprite.textureBounds.x += SPEED * deltaTime;
+        playerSprite.textureBounds.x += PLAYER_SPEED * deltaTime;
     }
+
+    if (ball.x < 0 || ball.x > SCREEN_WIDTH - ball.w)
+    {
+        ballVelocityX *= -1;
+
+        colorIndex = rand_range(0, 5);
+    }
+
+    else if (ball.y < 0 || ball.y > SCREEN_HEIGHT - ball.h)
+    {
+        ballVelocityY *= -1;
+
+        colorIndex = rand_range(0, 5);
+    }
+
+    else if (SDL_HasIntersection(&playerSprite.textureBounds, &ball))
+    {
+        ballVelocityX *= -1;
+        ballVelocityY *= -1;
+
+        colorIndex = rand_range(0, 5);
+    }
+
+    ball.x += ballVelocityX * deltaTime;
+    ball.y += ballVelocityY * deltaTime;
 }
 
 void renderSprite(Sprite sprite)
@@ -96,9 +141,11 @@ void render()
         SDL_RenderCopy(renderer, pauseTexture, NULL, &pauseBounds);
     }
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b, 255);
 
-    renderSprite(alienSprite);
+    SDL_RenderFillRect(renderer, &ball);
+
+    renderSprite(playerSprite);
 
     SDL_RenderPresent(renderer);
 }
@@ -144,7 +191,7 @@ int main(int argc, char *args[])
     //  I get the width and height of the actual texture
     
     //The path of the file references the build folder
-    alienSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+    playerSprite = loadSprite(renderer, "alien_1.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
     sound = loadSound("laser.wav");
 
