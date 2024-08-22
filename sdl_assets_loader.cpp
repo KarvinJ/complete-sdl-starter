@@ -1,5 +1,5 @@
 #include "sdl_assets_loader.h"
-#include <SDL2/SDL_image.h>
+#include <iostream>
 
 Sprite loadSprite(SDL_Renderer *renderer, const char *filePath, int positionX, int positionY)
 {
