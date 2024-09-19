@@ -18,6 +18,11 @@ bool isGamePaused;
 SDL_Texture *pauseTexture = nullptr;
 SDL_Rect pauseBounds;
 
+SDL_Texture *scoreTexture = nullptr;
+SDL_Rect scoreBounds;
+
+int score;
+
 TTF_Font *fontSquare = nullptr;
 
 SDL_Rect ball = {SCREEN_WIDTH / 2 + 50, SCREEN_HEIGHT / 2, 32, 32};
@@ -120,6 +125,14 @@ void update(float deltaTime)
         ballVelocityY *= -1;
 
         colorIndex = rand_range(0, 5);
+
+        Mix_PlayChannel(-1, sound, 0);
+
+        score++;
+
+        std::string scoreString = "score: " + std::to_string(score);
+
+        updateTextureText(scoreTexture, scoreString.c_str(), fontSquare, renderer);
     }
 
     ball.x += ballVelocityX * deltaTime;
@@ -136,16 +149,21 @@ void render()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    if(isGamePaused) 
-    {
-        SDL_RenderCopy(renderer, pauseTexture, NULL, &pauseBounds);
-    }
-
     SDL_SetRenderDrawColor(renderer, colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b, 255);
 
     SDL_RenderFillRect(renderer, &ball);
 
     renderSprite(playerSprite);
+
+    if (isGamePaused)
+    {
+        SDL_RenderCopy(renderer, pauseTexture, NULL, &pauseBounds);
+    }
+
+    SDL_QueryTexture(scoreTexture, NULL, NULL, &scoreBounds.w, &scoreBounds.h);
+    scoreBounds.x = 200 * scale;
+    scoreBounds.y = scoreBounds.h / 2;
+    SDL_RenderCopy(renderer, scoreTexture, NULL, &scoreBounds);
 
     SDL_RenderPresent(renderer);
 }
@@ -179,9 +197,11 @@ int main(int argc, char *args[])
         }
     }
 
-    fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 32*scale);
+    fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 18*scale);
 
     // load title
+    updateTextureText(scoreTexture, "Score: 0", fontSquare, renderer);
+
     updateTextureText(pauseTexture, "Game Paused", fontSquare, renderer);
 
     SDL_QueryTexture(pauseTexture, NULL, NULL, &pauseBounds.w, &pauseBounds.h);
