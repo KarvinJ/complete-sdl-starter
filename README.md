@@ -55,3 +55,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+# Credits
+The credits of this template goes [sharkwouter](https://github.com/sharkwouter/psp-sdl2-osk-example) for the base template.
