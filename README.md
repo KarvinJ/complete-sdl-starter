@@ -1,4 +1,4 @@
-# PSP - VITA SDL2 Example
+# A PC - PSP - VITA SDL2 Starter Template.
 
 The app was purposely made to work on both PC and PSP, to have a bit of an idea of what should be happening and if the code is alright.
 
