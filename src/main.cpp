@@ -131,17 +131,11 @@ void update(float deltaTime)
         score++;
 
         std::string scoreString = "score: " + std::to_string(score);
-
         updateTextureText(scoreTexture, scoreString.c_str(), fontSquare, renderer);
     }
 
     ball.x += ballVelocityX * deltaTime;
     ball.y += ballVelocityY * deltaTime;
-}
-
-void renderSprite(Sprite &sprite)
-{
-    SDL_RenderCopy(renderer, sprite.texture, NULL, &sprite.bounds);
 }
 
 void render()
@@ -153,7 +147,7 @@ void render()
 
     SDL_RenderFillRect(renderer, &ball);
 
-    renderSprite(playerSprite);
+    renderSprite(renderer, playerSprite);
 
     if (isGamePaused)
     {
