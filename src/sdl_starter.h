@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <iostream>
 
 // psp = 1, vita = 2, pc = 3
 const int scale = 1;

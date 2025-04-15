@@ -1,6 +1,7 @@
 #include "sdl_starter.h"
 #include "sdl_assets_loader.h"
 #include <time.h>
+#include <string>
 
 const int PLAYER_SPEED = 300*scale;
 
