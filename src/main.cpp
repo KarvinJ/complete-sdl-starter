@@ -1,5 +1,4 @@
 #include "sdl_starter.h"
-#include "sdl_assets_loader.h"
 #include <time.h>
 #include <string>
 
@@ -14,7 +13,8 @@ Sprite playerSprite;
 Mix_Chunk *sound = nullptr;
 Mix_Music *music = nullptr;
 
-bool isGamePaused;
+bool isGameRunning = true;
+bool isGamePaused = false;
 
 SDL_Texture *pauseTexture = nullptr;
 SDL_Rect pauseBounds;
@@ -22,7 +22,7 @@ SDL_Rect pauseBounds;
 SDL_Texture *scoreTexture = nullptr;
 SDL_Rect scoreBounds;
 
-int score;
+int score = 0;
 
 TTF_Font *fontSquare = nullptr;
 
@@ -31,7 +31,7 @@ SDL_Rect ball = {SCREEN_WIDTH / 2 + 50, SCREEN_HEIGHT / 2, 32, 32};
 int ballVelocityX = 200 * scale;
 int ballVelocityY = 200 * scale;
 
-int colorIndex;
+int colorIndex = 0;
 
 SDL_Color colors[] = {
     {128, 128, 128, 0}, // gray 
@@ -44,20 +44,6 @@ SDL_Color colors[] = {
     {255, 0, 255, 0},   // purple
 };
 
-void quitGame()
-{
-    Mix_FreeChunk(sound);
-    SDL_DestroyTexture(playerSprite.texture);
-    SDL_DestroyTexture(pauseTexture);
-    SDL_GameControllerClose(controller);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    Mix_CloseAudio();
-    IMG_Quit();
-    TTF_Quit();
-    SDL_Quit();
-}
-
 void handleEvents()
 {
     SDL_Event event;
@@ -66,8 +52,7 @@ void handleEvents()
     {
         if (event.type == SDL_QUIT) 
         {
-            quitGame();
-            exit(0);
+            isGameRunning = false;
         }
 
 //when I need a more precise input i should use this method of input reading
@@ -79,7 +64,7 @@ void handleEvents()
     }
 }
 
-int rand_range(int min, int max)
+int getRandomNumberBetweenRange(int min, int max)
 {
     return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
@@ -110,14 +95,14 @@ void update(float deltaTime)
     {
         ballVelocityX *= -1;
 
-        colorIndex = rand_range(0, 5);
+        colorIndex = getRandomNumberBetweenRange(0, 5);
     }
 
     else if (ball.y < 0 || ball.y > SCREEN_HEIGHT - ball.h)
     {
         ballVelocityY *= -1;
 
-        colorIndex = rand_range(0, 5);
+        colorIndex = getRandomNumberBetweenRange(0, 5);
     }
 
     else if (SDL_HasIntersection(&playerSprite.bounds, &ball))
@@ -125,7 +110,7 @@ void update(float deltaTime)
         ballVelocityX *= -1;
         ballVelocityY *= -1;
 
-        colorIndex = rand_range(0, 5);
+        colorIndex = getRandomNumberBetweenRange(0, 5);
 
         Mix_PlayChannel(-1, sound, 0);
 
@@ -172,7 +157,7 @@ int main(int argc, char *args[])
     //  limits the maximum framerate to match the display's refresh rate.
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
  
-    if(startSDL(window, renderer) > 0) 
+    if(startSDLSystems(window, renderer) > 0) 
     {
         return 1;
     }
@@ -213,7 +198,7 @@ int main(int argc, char *args[])
     Uint32 currentFrameTime = previousFrameTime;
     float deltaTime = 0.0f;
 
-    while (true)
+    while (isGameRunning)
     {
         currentFrameTime = SDL_GetTicks();
         deltaTime = (currentFrameTime - previousFrameTime) / 1000.0f;
@@ -231,5 +216,13 @@ int main(int argc, char *args[])
         render();
     }
 
-    quitGame();
+    Mix_FreeChunk(sound);
+    SDL_DestroyTexture(playerSprite.texture);
+    SDL_DestroyTexture(pauseTexture);
+    SDL_GameControllerClose(controller);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    stopSDLSystems();
+
+    return 0;
 }
