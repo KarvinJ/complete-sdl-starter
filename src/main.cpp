@@ -216,6 +216,7 @@ int main(int argc, char *args[])
         render();
     }
 
+    Mix_FreeMusic(music);
     Mix_FreeChunk(sound);
     SDL_DestroyTexture(playerSprite.texture);
     SDL_DestroyTexture(pauseTexture);
