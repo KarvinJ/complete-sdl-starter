@@ -2,7 +2,7 @@
 #include <time.h>
 #include <string>
 
-const int PLAYER_SPEED = 300*scale;
+const int PLAYER_SPEED = 300 * scale;
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
@@ -164,7 +164,7 @@ int main(int argc, char *args[])
     
     controller = SDL_GameControllerOpen(0);
   
-    fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 18*scale);
+    fontSquare = TTF_OpenFont("square_sans_serif_7.ttf", 18 * scale);
 
     // load title
     updateTextureText(scoreTexture, "Score: 0", fontSquare, renderer);
@@ -203,8 +203,6 @@ int main(int argc, char *args[])
         currentFrameTime = SDL_GetTicks();
         deltaTime = (currentFrameTime - previousFrameTime) / 1000.0f;
         previousFrameTime = currentFrameTime;
-
-        SDL_GameControllerUpdate();
 
         handleEvents();
 
